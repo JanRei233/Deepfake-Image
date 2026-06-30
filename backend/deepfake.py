@@ -26,11 +26,9 @@ def prepare_image(image_bytes):
     """Preprocesses the image to match the model's expected input."""
     image = Image.open(io.BytesIO(image_bytes)).convert("RGB")
     
-    # IMPORTANT: Change 224 to match the size used in your Jupyter Notebook
-    image = image.resize((224, 224)) 
+    image = image.resize((256, 256)) 
     
     img_array = np.array(image, dtype=np.float32)
-    # Normalize if you did this during training (e.g., dividing by 255.0)
     img_array = img_array / 255.0 
     img_array = np.expand_dims(img_array, axis=0)
     
