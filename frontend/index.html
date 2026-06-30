@@ -1,91 +1,220 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Deepfake Detector</title>
-    <style>
-        body { font-family: Arial, sans-serif; text-align: center; margin-top: 50px; background-color: #f4f4f9; }
-        .container { max-width: 500px; margin: 0 auto; padding: 20px; background: white; border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
-        #preview { max-width: 100%; margin-top: 20px; border-radius: 5px; display: none; }
-        button { margin-top: 15px; padding: 10px 20px; background-color: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer; }
-        button:hover { background-color: #0056b3; }
-        #result { margin-top: 20px; font-weight: bold; font-size: 1.2em; }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <!-- SEO -->
+  <title>DeepGuard — AI Deepfake Image Detector</title>
+  <meta name="description" content="Instantly detect AI-generated and manipulated images with DeepGuard, a cutting-edge deepfake detection tool powered by deep learning." />
+  <meta name="theme-color" content="#080c14" />
+
+  <!-- Open Graph -->
+  <meta property="og:title" content="DeepGuard — AI Deepfake Image Detector" />
+  <meta property="og:description" content="Upload any image and find out in seconds whether it has been AI-generated or manipulated." />
+  <meta property="og:type" content="website" />
+
+  <!-- Stylesheet -->
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
 
-<div class="container">
-    <h2>Deepfake Image Detector</h2>
-    <p>Upload an image to verify its authenticity.</p>
-    
-    <input type="file" id="imageInput" accept="image/*" onchange="previewImage(event)">
-    <br>
-    <img id="preview" alt="Image Preview">
-    <br>
-    <button onclick="detectDeepfake()">Detect Deepfake</button>
+  <!-- Animated background -->
+  <div class="bg-canvas" aria-hidden="true">
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
+  </div>
 
-    <div id="result"></div>
-</div>
+  <!-- Page wrapper -->
+  <div class="page-wrapper">
 
-<script>
-    // URL of your FastAPI backend. 
-    // Change this to your deployed URL later!
-    const API_URL = "https://deepfake-image-2w5s.onrender.com";
+    <!-- ── Header ── -->
+    <header class="site-header">
+      <div class="logo-badge">
+        <span class="dot"></span>
+        AI Forensics Tool
+      </div>
+      <h1 class="site-title">DeepGuard</h1>
+      <p class="site-subtitle">
+        Upload an image to detect AI manipulation with neural-network precision.
+        Real-time analysis powered by EfficientNet-B4.
+      </p>
+    </header>
 
-    function previewImage(event) {
-        const reader = new FileReader();
-        reader.onload = function() {
-            const preview = document.getElementById('preview');
-            preview.src = reader.result;
-            preview.style.display = 'block';
-            document.getElementById('result').innerText = ''; // Clear previous result
-        }
-        reader.readAsDataURL(event.target.files[0]);
-    }
+    <!-- ── Main Detector Card ── -->
+    <main class="detector-card" role="main">
+      <div class="card-inner">
 
-    async function detectDeepfake() {
-        const fileInput = document.getElementById('imageInput');
-        const resultDiv = document.getElementById('result');
+        <!-- Drop Zone -->
+        <div
+          class="dropzone"
+          id="dropzone"
+          role="button"
+          aria-label="Upload an image by clicking or dragging it here"
+          tabindex="0"
+        >
+          <!-- Hidden file input covers the whole zone -->
+          <input
+            type="file"
+            id="fileInput"
+            accept="image/*"
+            aria-label="Choose image file"
+          />
 
-        if (fileInput.files.length === 0) {
-            alert("Please select an image first.");
-            return;
-        }
+          <div class="dz-icon-wrap" aria-hidden="true">
+            <!-- Upload icon -->
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none"
+              viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.6"
+              aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round"
+                d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25
+                   2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5
+                   4.5M12 3v13.5"/>
+            </svg>
+          </div>
 
-        resultDiv.innerText = "Analyzing...";
-        resultDiv.style.color = "black";
+          <p class="dz-title">Drop your image here</p>
+          <p class="dz-subtitle">
+            or <span>click to browse</span> from your device
+          </p>
 
-        const formData = new FormData();
-        formData.append("file", fileInput.files[0]);
+          <div class="dz-formats" aria-label="Supported formats">
+            <span class="tag">JPG</span>
+            <span class="tag">PNG</span>
+            <span class="tag">WEBP</span>
+            <span class="tag">BMP</span>
+            <span class="tag">GIF</span>
+          </div>
+        </div>
 
-        try {
-            const response = await fetch(API_URL, {
-                method: "POST",
-                body: formData
-            });
-            const data = await response.json();
+        <!-- Image Preview -->
+        <div class="preview-panel" id="previewPanel">
+          <div class="preview-frame" id="previewFrame">
+            <img id="preview-img" alt="Uploaded image preview" />
+            <div class="scan-overlay" aria-hidden="true"></div>
+            <div class="scan-line" id="scanLine" aria-hidden="true"></div>
+          </div>
+          <div class="preview-meta">
+            <span class="file-name" id="fileName">image.jpg</span>
+            <span class="file-size" id="fileSize">—</span>
+          </div>
+          <button class="change-btn" id="changeBtn" aria-label="Remove current image and upload a different one">
+            <!-- Refresh icon -->
+            <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13"
+              fill="none" viewBox="0 0 24 24" stroke="currentColor"
+              stroke-width="2" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round"
+                d="M16.023 9.348h4.992v-.001M2.985
+                   19.644v-4.992m0 0h4.992m-4.993
+                   0l3.181 3.183a8.25 8.25 0
+                   0013.803-3.7M4.031 9.865a8.25
+                   8.25 0 0113.803-3.7l3.181
+                   3.182m0-4.991v4.99"/>
+            </svg>
+            Change image
+          </button>
+        </div>
 
-            if (data.error) {
-                resultDiv.innerText = "Backend Error: " + (data.error || JSON.stringify(data.detail));
-                resultDiv.style.color = "red";
-                return;
-            }
+        <!-- Detect Button -->
+        <button class="detect-btn" id="detectBtn" aria-live="polite">
+          <span class="btn-content">
+            <span class="btn-spinner" aria-hidden="true"></span>
+            <!-- Shield icon -->
+            <svg class="btn-icon" xmlns="http://www.w3.org/2000/svg"
+              width="20" height="20" fill="none"
+              viewBox="0 0 24 24" stroke="currentColor"
+              stroke-width="2" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round"
+                d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959
+                   11.959 0 013.598 6 11.99 11.99 0 003 9.749c0
+                   5.592 3.824 10.29 9 11.623 5.176-1.332
+                   9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196
+                   0-6.1-1.248-8.25-3.285z"/>
+            </svg>
+            <span class="btn-label">Analyze Image</span>
+          </span>
+        </button>
 
-            const confidence = (data.confidence * 100).toFixed(2);
-            if (data.is_deepfake) {
-                resultDiv.innerHTML = `🚨 Deepfake Detected!<br>Confidence: ${confidence}%`;
-                resultDiv.style.color = "red";
-            } else {
-                resultDiv.innerHTML = `✅ Real Image<br>Confidence: ${confidence}%`;
-                resultDiv.style.color = "green";
-            }
-        } catch (error) {
-            resultDiv.innerText = "Failed to connect to the server.";
-            resultDiv.style.color = "red";
-        }
-    }
-</script>
+        <!-- Result Panel -->
+        <section class="result-panel" id="resultPanel" aria-live="polite">
+
+          <!-- Verdict Badge -->
+          <div class="verdict-badge" id="verdictBadge">
+            <div class="verdict-icon" id="verdictIcon" aria-hidden="true">—</div>
+            <div class="verdict-text">
+              <div class="verdict-title" id="verdictTitle">—</div>
+              <div class="verdict-subtitle" id="verdictSubtitle"></div>
+            </div>
+          </div>
+
+          <!-- Confidence Meter -->
+          <div class="confidence-section">
+            <div class="confidence-header">
+              <span class="confidence-label">Confidence Score</span>
+              <span class="confidence-value" id="confidenceVal">0.0%</span>
+            </div>
+
+            <div class="meter-track" role="progressbar"
+              aria-valuemin="0" aria-valuemax="100"
+              aria-valuenow="0" id="meterTrack">
+              <div class="meter-fill" id="meterFill"></div>
+            </div>
+
+            <div class="meter-ticks" aria-hidden="true">
+              <span>0%</span>
+              <span>25%</span>
+              <span>50%</span>
+              <span>75%</span>
+              <span>100%</span>
+            </div>
+          </div>
+
+          <!-- Analysis Details Grid -->
+          <div class="analysis-grid">
+            <div class="analysis-item">
+              <div class="ai-label">Status</div>
+              <div class="ai-value" id="detailStatus">—</div>
+            </div>
+            <div class="analysis-item">
+              <div class="ai-label">Model</div>
+              <div class="ai-value" id="detailModel">—</div>
+            </div>
+            <div class="analysis-item">
+              <div class="ai-label">Analysis Time</div>
+              <div class="ai-value" id="detailTime">—</div>
+            </div>
+            <div class="analysis-item">
+              <div class="ai-label">File</div>
+              <div class="ai-value" id="detailFileName">—</div>
+            </div>
+          </div>
+
+        </section>
+        <!-- /result-panel -->
+
+      </div>
+      <!-- /card-inner -->
+    </main>
+
+    <!-- ── Footer ── -->
+    <footer class="site-footer">
+      <p>
+        DeepGuard &mdash; Powered by EfficientNet-B4 &bull;
+        <a href="https://github.com/JanRei233/Deepfake-Image" target="_blank" rel="noopener">
+          View on GitHub
+        </a>
+      </p>
+    </footer>
+
+  </div>
+  <!-- /page-wrapper -->
+
+  <!-- Toast notification -->
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <!-- JS (deferred so DOM is ready) -->
+  <script src="app.js" defer></script>
 
 </body>
 </html>
