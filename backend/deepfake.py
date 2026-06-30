@@ -54,14 +54,21 @@ async def predict_image(file: UploadFile = File(...)):
         interpreter.invoke()
         prediction = interpreter.get_tensor(output_details[0]['index'])
         
-        # Extract the score (assuming binary classification where > 0.5 is Fake)
+        # ── Classification threshold ──────────────────────────────────
+        # 0.35 = more sensitive (catches more fakes, may flag some real images)
+        # 0.50 = balanced (default, higher false-negative rate)
+        # Tune this value based on your validation results.
+        THRESHOLD = 0.35
+
         score = float(prediction[0][0])
-        is_deepfake = bool(score > 0.5)
-        
+        is_deepfake = bool(score > THRESHOLD)
+
         return {
-            "filename": file.filename,
+            "filename":    file.filename,
             "is_deepfake": is_deepfake,
-            "confidence": score if is_deepfake else 1 - score
+            "raw_score":   round(score, 6),          # 0 = real, 1 = fake
+            "confidence":  score if is_deepfake else 1 - score,
+            "threshold":   THRESHOLD,
         }
     except Exception as e:
         return {"error": str(e)}

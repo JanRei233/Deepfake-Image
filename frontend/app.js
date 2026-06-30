@@ -195,7 +195,7 @@ function renderResult(data, elapsed) {
   // Detail grid
   detailStatus.textContent   = isDeepfake ? "MANIPULATED" : "AUTHENTIC";
   detailStatus.style.color   = isDeepfake ? "var(--rose-400)" : "var(--emerald-400)";
-  detailModel.textContent    = "EfficientNet-B4";
+  detailModel.textContent    = `raw: ${typeof data.raw_score === "number" ? (data.raw_score * 100).toFixed(2) + "% fake" : "—"}`;
   detailTime.textContent     = elapsed + "s";
   detailFileName.textContent = truncate(selectedFile.name, 20);
 
