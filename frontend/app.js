@@ -2,7 +2,7 @@
 //  DEEPFAKE DETECTOR — app.js
 // ============================================================
 
-const API_URL = "https://deepfake-image-2w5s.onrender.com/predict";
+const API_URL = "https://deepfake-image-ewub.onrender.com/predict";
 
 // ── DOM refs ──────────────────────────────────────────────
 const dropzone       = document.getElementById("dropzone");
