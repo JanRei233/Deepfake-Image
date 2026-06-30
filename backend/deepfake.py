@@ -23,15 +23,21 @@ input_details = interpreter.get_input_details()
 output_details = interpreter.get_output_details()
 
 def prepare_image(image_bytes):
-    """Preprocesses the image to match the model's expected input."""
+    """Preprocesses the image to match the model's expected input.
+
+    The target resolution is read directly from the TFLite model's input tensor
+    so this function is always correct regardless of how the model was trained.
+    Expected tensor shape: [1, H, W, 3]
+    """
+    _, target_h, target_w, _ = input_details[0]['shape']   # e.g. [1, 256, 256, 3]
+
     image = Image.open(io.BytesIO(image_bytes)).convert("RGB")
-    
-    image = image.resize((256, 256)) 
-    
+    image = image.resize((target_w, target_h))              # PIL uses (width, height)
+
     img_array = np.array(image, dtype=np.float32)
-    img_array = img_array / 255.0 
-    img_array = np.expand_dims(img_array, axis=0)
-    
+    img_array = img_array / 255.0
+    img_array = np.expand_dims(img_array, axis=0)           # → (1, H, W, 3)
+
     return img_array
 
 @app.post("/predict")
