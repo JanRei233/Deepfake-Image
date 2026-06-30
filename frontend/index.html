@@ -67,7 +67,7 @@
             const data = await response.json();
 
             if (data.error) {
-                resultDiv.innerText = "Error: " + data.error;
+                resultDiv.innerText = "Backend Error: " + (data.error || JSON.stringify(data.detail));
                 resultDiv.style.color = "red";
                 return;
             }
