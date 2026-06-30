@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Deepfake Detector</title>
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; margin-top: 50px; background-color: #f4f4f9; }
+        .container { max-width: 500px; margin: 0 auto; padding: 20px; background: white; border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
+        #preview { max-width: 100%; margin-top: 20px; border-radius: 5px; display: none; }
+        button { margin-top: 15px; padding: 10px 20px; background-color: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer; }
+        button:hover { background-color: #0056b3; }
+        #result { margin-top: 20px; font-weight: bold; font-size: 1.2em; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>Deepfake Image Detector</h2>
+    <p>Upload an image to verify its authenticity.</p>
+    
+    <input type="file" id="imageInput" accept="image/*" onchange="previewImage(event)">
+    <br>
+    <img id="preview" alt="Image Preview">
+    <br>
+    <button onclick="detectDeepfake()">Detect Deepfake</button>
+
+    <div id="result"></div>
+</div>
+
+<script>
+    // URL of your FastAPI backend. 
+    // Change this to your deployed URL later!
+    const API_URL = "https://deepfake-image-2w5s.onrender.com";
+
+    function previewImage(event) {
+        const reader = new FileReader();
+        reader.onload = function() {
+            const preview = document.getElementById('preview');
+            preview.src = reader.result;
+            preview.style.display = 'block';
+            document.getElementById('result').innerText = ''; // Clear previous result
+        }
+        reader.readAsDataURL(event.target.files[0]);
+    }
+
+    async function detectDeepfake() {
+        const fileInput = document.getElementById('imageInput');
+        const resultDiv = document.getElementById('result');
+
+        if (fileInput.files.length === 0) {
+            alert("Please select an image first.");
+            return;
+        }
+
+        resultDiv.innerText = "Analyzing...";
+        resultDiv.style.color = "black";
+
+        const formData = new FormData();
+        formData.append("file", fileInput.files[0]);
+
+        try {
+            const response = await fetch(API_URL, {
+                method: "POST",
+                body: formData
+            });
+            const data = await response.json();
+
+            if (data.error) {
+                resultDiv.innerText = "Error: " + data.error;
+                resultDiv.style.color = "red";
+                return;
+            }
+
+            const confidence = (data.confidence * 100).toFixed(2);
+            if (data.is_deepfake) {
+                resultDiv.innerHTML = `🚨 Deepfake Detected!<br>Confidence: ${confidence}%`;
+                resultDiv.style.color = "red";
+            } else {
+                resultDiv.innerHTML = `✅ Real Image<br>Confidence: ${confidence}%`;
+                resultDiv.style.color = "green";
+            }
+        } catch (error) {
+            resultDiv.innerText = "Failed to connect to the server.";
+            resultDiv.style.color = "red";
+        }
+    }
+</script>
+
+</body>
+</html>
