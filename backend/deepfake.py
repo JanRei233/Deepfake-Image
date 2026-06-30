@@ -25,6 +25,12 @@ output_details = interpreter.get_output_details()
 def prepare_image(image_bytes):
     """Preprocesses the image to match the model's expected input.
 
+    IMPORTANT — EfficientNet preprocessing:
+      Training used tf.keras.applications.efficientnet.preprocess_input()
+      which maps pixel values from [0, 255] to [-1, 1].
+      Using /255.0 (simple normalisation) produces the WRONG input distribution
+      and is the primary cause of poor inference accuracy.
+
     The target resolution is read directly from the TFLite model's input tensor
     so this function is always correct regardless of how the model was trained.
     Expected tensor shape: [1, H, W, 3]
@@ -32,11 +38,15 @@ def prepare_image(image_bytes):
     _, target_h, target_w, _ = input_details[0]['shape']   # e.g. [1, 256, 256, 3]
 
     image = Image.open(io.BytesIO(image_bytes)).convert("RGB")
-    image = image.resize((target_w, target_h))              # PIL uses (width, height)
+    image = image.resize((int(target_w), int(target_h)))    # PIL uses (width, height)
 
     img_array = np.array(image, dtype=np.float32)
-    img_array = img_array / 255.0
-    img_array = np.expand_dims(img_array, axis=0)           # → (1, H, W, 3)
+
+    # EfficientNet preprocessing: scale [0,255] to [-1, 1]
+    # Equivalent to: tf.keras.applications.efficientnet.preprocess_input()
+    img_array = (img_array / 127.5) - 1.0
+
+    img_array = np.expand_dims(img_array, axis=0)           # shape: (1, H, W, 3)
 
     return img_array
 
@@ -45,19 +55,19 @@ async def predict_image(file: UploadFile = File(...)):
     try:
         # Read the uploaded image
         image_bytes = await file.read()
-        
+
         # Preprocess
         input_data = prepare_image(image_bytes)
-        
+
         # Run inference
         interpreter.set_tensor(input_details[0]['index'], input_data)
         interpreter.invoke()
         prediction = interpreter.get_tensor(output_details[0]['index'])
-        
-        # ── Classification threshold ──────────────────────────────────
+
+        # -- Classification threshold -----------------------------------------
         # 0.35 = more sensitive (catches more fakes, may flag some real images)
         # 0.50 = balanced (default, higher false-negative rate)
-        # Tune this value based on your validation results.
+        # After retraining, update this to the best_threshold printed by train.py
         THRESHOLD = 0.35
 
         score = float(prediction[0][0])
