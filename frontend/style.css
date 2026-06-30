@@ -337,6 +337,20 @@ body {
   padding: 3px 8px;
 }
 
+kbd {
+  display: inline-block;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--cyan-400);
+  background: rgba(34,211,238,0.08);
+  border: 1px solid rgba(34,211,238,0.25);
+  border-bottom-width: 2px;
+  border-radius: 4px;
+  padding: 1px 6px;
+  letter-spacing: 0.04em;
+}
+
 /* ── Image Preview Panel ───────────────────────────────── */
 .preview-panel {
   margin-top: 24px;

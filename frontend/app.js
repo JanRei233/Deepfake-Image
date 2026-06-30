@@ -68,6 +68,29 @@ document.getElementById("changeBtn").addEventListener("click", () => {
   meterFill.style.width = "0";
 });
 
+// ── Clipboard paste (Ctrl+V / Cmd+V anywhere on page) ───────
+document.addEventListener("paste", (e) => {
+  const items = (e.clipboardData || e.originalEvent?.clipboardData)?.items;
+  if (!items) return;
+
+  for (const item of items) {
+    if (item.type.startsWith("image/")) {
+      const blob = item.getAsFile();
+      if (!blob) continue;
+
+      // Give pasted blobs a readable filename with the right extension
+      const ext  = item.type.split("/")[1] || "png";
+      const file = new File([blob], `pasted-image.${ext}`, { type: item.type });
+      handleFile(file);
+      showToast("📋  Image pasted from clipboard!", 2500);
+      return;
+    }
+  }
+
+  // Nothing image-like was found in the clipboard
+  showToast("⚠️  No image found in clipboard. Copy an image first.");
+});
+
 // ── Detect button ─────────────────────────────────────────
 detectBtn.addEventListener("click", detectDeepfake);
 
