@@ -68,7 +68,7 @@ async def predict_image(file: UploadFile = File(...)):
         # 0.35 = more sensitive (catches more fakes, may flag some real images)
         # 0.50 = balanced (default, higher false-negative rate)
         # After retraining, update this to the best_threshold printed by train.py
-        THRESHOLD = 0.35
+        THRESHOLD = 0.45
 
         score = float(prediction[0][0])
         is_deepfake = bool(score > THRESHOLD)
